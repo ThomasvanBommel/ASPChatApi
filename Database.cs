@@ -10,6 +10,11 @@ namespace ChatApi2{
 
         /** ACCOUNT ----------------------------------------------------------------------------- */
 
+        /**
+         * Add a new user to the database
+         * @param Usr - User to add
+         * @returns null if successful, NpgsqlException otherwise
+         */
         public static NpgsqlException AddUser(User Usr){
             return NonQuery(CreateCommand(
                 "INSERT INTO users (name, joined, token, password) "+
@@ -22,10 +27,20 @@ namespace ChatApi2{
             ));
         }
 
+        /**
+         * Get user from the database by username
+         * @param Name - Username of the user
+         * @returns User if successful, null otherwise
+         */
         public static User GetUserByName(string Name){
             return GetUserBy("name", Name);
         }
 
+        /**
+         * Get user from the database by token
+         * @param Token - Token of the user
+         * @returns User if successful, null otherwise
+         */
         public static User GetUserByToken(Guid Token){
             if(Token.CompareTo(Guid.Empty) == 0)
                 return null;
@@ -33,6 +48,12 @@ namespace ChatApi2{
             return GetUserBy("token", Token.ToString());
         }
 
+        /**
+         * Get user by key / value pair
+         * @param Key - Key / parameter to check
+         * @param Value - Value to check
+         * @returns - User if successful, null otherwise
+         */
         private static User GetUserBy(string Key, object Value){
             User user = null;
 
@@ -63,6 +84,11 @@ namespace ChatApi2{
             return user;
         }
 
+        /**
+         * Set database token to null
+         * @param Token - Token to check for
+         * @returns null if successful, NpgsqlException otherwise
+         */
         public static NpgsqlException RemoveToken(Guid Token){
             return NonQuery(CreateCommand(
                 "UPDATE users SET token = null WHERE token = @token",
@@ -72,6 +98,12 @@ namespace ChatApi2{
             ));
         }
 
+        /**
+         * Set user token
+         * @param Username - Username of the user you would like to modify
+         * @param Token - Token to set
+         * @returns null if successful, NpgsqlException otherwise
+         */
         public static NpgsqlException SetToken(string Username, Guid Token){
             return NonQuery(CreateCommand(
                 "UPDATE users SET token = @token WHERE name = @name",
@@ -84,6 +116,11 @@ namespace ChatApi2{
 
         /** CHAT -------------------------------------------------------------------------------- */
 
+        /**
+         * Add a message to the database
+         * @param Msg - Message to add
+         * @returns null if successful, NpgsqlException otherwise
+         */
         public static NpgsqlException AddMessage(Message Msg){
             return NonQuery(CreateCommand(
                 "INSERT INTO messages (created, text, username) VALUES (@created, @text, @user)",
@@ -95,6 +132,12 @@ namespace ChatApi2{
             ));
         }
 
+        /**
+         * Get messages from the database
+         * @param Decending - false if you want descending data, true otherwise
+         * @param Limit - Limit the amount of results, 0=All 
+         * @returns List of messages requested
+         */
         public static List<Message> GetMessages(Boolean Decending=true, int Limit=0){
             List<Message> messages = new List<Message>();
 
@@ -131,6 +174,11 @@ namespace ChatApi2{
 
         /** BACKEND ----------------------------------------------------------------------------- */
 
+        /**
+         * Execute anything except a SELECT query
+         * @param Command - Command to execute
+         * @returns null if successful, NpgsqlException otherwise
+         */
         private static NpgsqlException NonQuery(NpgsqlCommand Command){
             try{
                 Command.ExecuteNonQuery();
@@ -142,14 +190,10 @@ namespace ChatApi2{
             return null;
         }
 
-        // private static (NpgsqlException, NpgsqlConnection, NpgsqlDataReader) Query(NpgsqlCommand command){
-        //     try{
-        //         return (null, command.Connection, command.ExecuteReader());
-        //     }catch(NpgsqlException e){
-        //         return (e, null, null);
-        //     }
-        // }
-
+        /**
+         * Get a connection to the database
+         * @returns Open connection to the database
+         */
         private static NpgsqlConnection GetConnection(){
             // Probably inefficient, but I couldn't find in the docs how request a pool connection
             NpgsqlConnection connection = new NpgsqlConnection(ConnectionString);
@@ -159,6 +203,12 @@ namespace ChatApi2{
             return connection;
         }
 
+        /**
+         * Create an SQL command to be executed on the database
+         * @param Command - SQL query string, see https://www.npgsql.org/doc/basic-usage.html
+         * @param Parameters - SQL query string parameters, see link above
+         * @returns NpgsqlCommand command object
+         */
         private static NpgsqlCommand CreateCommand(string Command, Dictionary<string, object> Parameters){
             var command = new NpgsqlCommand(Command, GetConnection());
 
@@ -169,6 +219,10 @@ namespace ChatApi2{
             return command;
         }
 
+        /**
+         * Read a NpgsqlDataReader response to the debug console
+         * @param Reader - Thing to read
+         */
         private static void ReadToDebug(NpgsqlDataReader Reader){
             while(Reader.Read()){
                 for(int i = 0; i < Reader.FieldCount; i++){

@@ -22,6 +22,13 @@ namespace ChatApi2{
             PasswordHash = HashPassword(RawPassword);
         }
 
+        /**
+         * Create a new User
+         * @param Name - Username for the new user
+         * @param Joined - Date joined
+         * @param Token - Sign-in uuid token
+         * @param RawPassword - Plain text password (will be hashed)
+         */
         public User(string Name, DateTime Joined, Guid Token, string PasswordHash){
             this.Name = Name;
             this.Joined = Joined;
@@ -63,32 +70,21 @@ namespace ChatApi2{
             // Failed login
             return Guid.Empty;
         }
-        
-        /**
-         * Logout the user (set token to empty)
-         */
-        public void Logout(){
-            Token = Guid.Empty;
-        }
 
         /**
-         * Compare Guid token to this users token
-         * @param Token - Token to compare with
-         * @returns false if tokens don't match or the provided token is empty, true otherwise
+         * Get this users password hash, I made PasswordHash private so it wouldn't show up
+         * in user request responses
+         * @returns Hashed password
          */
-        public Boolean hasToken(Guid Token){
-            // Check if provided token is empty
-            if(Token == Guid.Empty) return false;
-
-            // Return comparison
-            return Token == this.Token;
-        }
-
         public string getHash_(){
             return PasswordHash;
         }
 
-
+        /**
+         * Convert this user into a string
+         * For debugging purposes
+         * @returns String representation of this user object
+         */
         public string ToString(){
             return "User {\n" +
                 $"\tName: {Name}\n" +
