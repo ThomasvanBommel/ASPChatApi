@@ -15,19 +15,19 @@ namespace ChatApi2.Controllers{
         /// </remarks>
         /// <param name="Username">Desired username</param>
         /// <param name="Password">Plain-text password</param>
-        /// <response code="200">
-        ///   Creates a user if Username is available
-        ///   Note: It does not log you in (see account/login)
-        /// </response>
+        /// <response code="201">Created account</response>
         /// <response code="500">Internal server error</response>
         [HttpPost, Route("create")]
         public Response CreateAccount(string Username, string Password){
             User user = new User(Username, Password);
             NpgsqlException e = Database.AddUser(user);
 
-            if(e != null)
+            if(e != null){
+                this.HttpContext.Response.StatusCode = 500;
                 return new Response("Error => " + e.Message);
+            }
 
+            this.HttpContext.Response.StatusCode = 201;
             return new Response(user);
         }
 
@@ -39,7 +39,8 @@ namespace ChatApi2.Controllers{
         /// </remarks>
         /// <param name="Username">Username of the account</param>
         /// <param name="Password">Plain-text password</param>
-        /// <response code="200">Returns the users Guid code to use for chat endpoint</response>
+        /// <response code="200">Ok</response>
+        /// <response code="400">Bad request, invalid username or password</response>
         [HttpPatch, Route("login")]
         public Response Login(string Username, string Password){
             User user = Database.GetUserByName(Username);
@@ -48,10 +49,13 @@ namespace ChatApi2.Controllers{
                 // I forsee a bug here...
                 Guid token = user.Login(Password);
 
-                if(token.CompareTo(Guid.Empty) != 0 && Database.SetToken(Username, token) == null)
+                if(token.CompareTo(Guid.Empty) != 0 && Database.SetToken(Username, token) == null){
+                    this.HttpContext.Response.StatusCode = 200;
                     return new Response(token);
+                }
             }
 
+            this.HttpContext.Response.StatusCode = 400;
             return new Response("Invalid username or password");
         }
 
@@ -64,13 +68,12 @@ namespace ChatApi2.Controllers{
         /// in the case of a database leak
         /// </remarks>
         /// <param name="Token">User Guid token (see account/login)</param>
-        /// <response code="200">"ok"</response>
+        /// <response code="204">No Content</response>
         [HttpPatch, Route("logout")]
-        public Response Logout(Guid Token){
+        public void Logout(Guid Token){
             Database.RemoveToken(Token);
 
-            // Attempt to not give to much information
-            return new Response("ok");
+            this.HttpContext.Response.StatusCode = 204;
         }
 
     }
