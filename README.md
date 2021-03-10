@@ -21,6 +21,10 @@ Api that allows user creation, login, logout, message submission and retrieval
        - 'text' TEXT NOTNULL
        - 'username' TEXT FOREIGNKEY (users -> name)
 
+### Demo
+
+ - [video](https://youtu.be/z0TYYZw_6FU)
+
 ### Run
 
  1. Restore database from backup file [database.sql](database.sql)
